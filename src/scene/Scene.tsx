@@ -29,10 +29,10 @@ function MarbleFloor({ mode }: { mode: Mode }) {
         <meshPhysicalMaterial
           map={marble}
           color="#0a0805"
-          roughness={0.18}
+          roughness={0.10}
           metalness={0.1}
           clearcoat={1}
-          clearcoatRoughness={0.15}
+          clearcoatRoughness={0.08}
           reflectivity={0.6}
         />
       ) : (
@@ -46,15 +46,15 @@ function RimLighting({ mode }: { mode: Mode }) {
   const intensity = mode === 'realistic' ? 1 : 0.6
   return (
     <>
-      <ambientLight intensity={mode === 'realistic' ? 0.18 : 0.45} />
+      <ambientLight intensity={mode === 'realistic' ? 0.10 : 0.45} />
       {/* Warm key spot from upper-right (matches the reference photo lighting) */}
       <SpotLight
         position={[6, 9, 4]}
         angle={0.45}
         penumbra={0.85}
-        intensity={120 * intensity}
+        intensity={220 * intensity}
         distance={30}
-        color="#f6dca0"
+        color="#fde0a8"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0005}
@@ -73,9 +73,18 @@ function RimLighting({ mode }: { mode: Mode }) {
         position={[0, 4, -8]}
         angle={0.5}
         penumbra={0.9}
-        intensity={70 * intensity}
+        intensity={100 * intensity}
         distance={25}
         color="#d4a45a"
+      />
+      {/* Low-front fill to softly light the label */}
+      <SpotLight
+        position={[0, 2, 7]}
+        angle={0.6}
+        penumbra={0.95}
+        intensity={30 * intensity}
+        distance={20}
+        color="#ffeed0"
       />
     </>
   )

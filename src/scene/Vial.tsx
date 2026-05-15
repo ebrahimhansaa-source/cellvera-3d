@@ -94,29 +94,29 @@ export function Vial({
         {mode === 'realistic' ? (
           <MeshTransmissionMaterial
             backside
-            samples={6}
-            thickness={0.25}
-            roughness={0.0}
-            ior={1.46}
+            samples={10}
+            thickness={0.15}
+            roughness={0}
+            ior={1.5}
             chromaticAberration={0.02}
             anisotropy={0.05}
             distortion={0}
             transmission={1}
             clearcoat={1}
-            attenuationDistance={3.5}
-            attenuationColor="#eaf3ee"
+            attenuationDistance={50}
+            attenuationColor="#ffffff"
             color="#ffffff"
           />
         ) : (
           <meshPhysicalMaterial
-            color="#f0f4ef"
-            roughness={0.05}
+            color="#f7faf8"
+            roughness={0.02}
             metalness={0}
-            transmission={0.92}
-            thickness={0.25}
-            ior={1.45}
+            transmission={0.98}
+            thickness={0.1}
+            ior={1.5}
             transparent
-            opacity={0.85}
+            opacity={0.45}
           />
         )}
       </mesh>
@@ -139,17 +139,17 @@ export function Vial({
             opacity={0.65}
           />
         ) : (
-          // Default amber peptide solution
+          // Default peptide solution — nearly clear, faintest warm tint
           <meshPhysicalMaterial
-            color="#e8c87a"
-            roughness={0.05}
-            transmission={0.85}
-            thickness={1}
+            color="#fbf6e6"
+            roughness={0}
+            transmission={0.98}
+            thickness={0.5}
             ior={1.36}
             transparent
-            opacity={0.78}
-            attenuationDistance={0.8}
-            attenuationColor="#c9a35a"
+            opacity={0.30}
+            attenuationDistance={8}
+            attenuationColor="#f0e2b8"
           />
         )}
       </mesh>
@@ -171,11 +171,11 @@ export function Vial({
           args={[GOLD_COLLAR_RADIUS, GOLD_COLLAR_RADIUS * 1.04, GOLD_COLLAR_HEIGHT, 64]}
         />
         <meshStandardMaterial
-          color={GOLD}
-          roughness={mode === 'realistic' ? 0.18 : 0.45}
+          color={mode === 'realistic' ? '#e6c478' : GOLD}
+          roughness={mode === 'realistic' ? 0.12 : 0.45}
           metalness={mode === 'realistic' ? 1 : 0.75}
-          emissive={GOLD_DEEP}
-          emissiveIntensity={0.06}
+          emissive={mode === 'realistic' ? '#5a4419' : GOLD_DEEP}
+          emissiveIntensity={mode === 'realistic' ? 0.08 : 0.06}
         />
       </mesh>
 
@@ -194,8 +194,8 @@ export function Vial({
         />
         <meshStandardMaterial
           color={CAP_BLACK}
-          roughness={mode === 'realistic' ? 0.4 : 0.65}
-          metalness={0.15}
+          roughness={mode === 'realistic' ? 0.35 : 0.65}
+          metalness={mode === 'realistic' ? 0.05 : 0.15}
         />
       </mesh>
 
@@ -207,7 +207,7 @@ export function Vial({
 
       {/* Gold ring inlay on top of the black cap (matches reference detail) */}
       <mesh position={[0, BLACK_CAP_Y + BLACK_CAP_HEIGHT / 2 + 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[BLACK_CAP_RADIUS * 0.48, BLACK_CAP_RADIUS * 0.78, 64]} />
+        <ringGeometry args={[BLACK_CAP_RADIUS * 0.55, BLACK_CAP_RADIUS * 0.72, 64]} />
         <meshStandardMaterial
           color={GOLD}
           side={THREE.DoubleSide}
