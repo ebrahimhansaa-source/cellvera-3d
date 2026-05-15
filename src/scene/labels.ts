@@ -5,7 +5,8 @@ const GOLD_BRIGHT = '#f1d588'
 const BLACK = '#080808'
 
 function drawMonogram(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  // Two interlocking arcs forming the "C-with-crescent" Cellvéra mark.
+  // Cellvéra mark: a large open-right "C" with a smaller inner crescent that
+  // nests into the gap, echoing the lid imprint on the duo box.
   ctx.save()
   ctx.translate(cx, cy)
 
@@ -16,17 +17,18 @@ function drawMonogram(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: 
 
   ctx.strokeStyle = grad
   ctx.lineCap = 'round'
-  ctx.lineWidth = r * 0.16
+  ctx.lineJoin = 'round'
 
-  // Outer C (open on the right)
+  // Outer C — open on the right with a moderate gap
+  ctx.lineWidth = r * 0.18
   ctx.beginPath()
-  ctx.arc(0, 0, r, Math.PI * 0.32, Math.PI * 1.68, false)
+  ctx.arc(0, 0, r * 0.95, Math.PI * 0.28, Math.PI * 1.72, false)
   ctx.stroke()
 
-  // Inner reverse-C (open on the left), nested inside the upper-right gap
-  ctx.lineWidth = r * 0.13
+  // Inner crescent — a small reverse-C tucked into the upper-right of the opening
+  ctx.lineWidth = r * 0.14
   ctx.beginPath()
-  ctx.arc(r * 0.18, -r * 0.02, r * 0.55, Math.PI * 1.18, Math.PI * 0.82, false)
+  ctx.arc(r * 0.32, -r * 0.05, r * 0.42, Math.PI * 0.6, Math.PI * 1.4, true)
   ctx.stroke()
 
   ctx.restore()
@@ -40,7 +42,10 @@ function makeCanvas(w: number, h: number) {
 }
 
 export function makeVialLabel(opts: { product: string; dose: string }): THREE.CanvasTexture {
-  const W = 1024
+  // Wider canvas (2:1) so when wrapped around the cylinder, the artwork only
+  // covers ~half the circumference — leaving the rest plain black like a real
+  // wraparound label and keeping the text readable from one direction.
+  const W = 2048
   const H = 1024
   const c = makeCanvas(W, H)
   const ctx = c.getContext('2d')!
@@ -52,54 +57,43 @@ export function makeVialLabel(opts: { product: string; dose: string }): THREE.Ca
   // Subtle vertical sheen
   const sheen = ctx.createLinearGradient(0, 0, W, 0)
   sheen.addColorStop(0, 'rgba(255,255,255,0)')
-  sheen.addColorStop(0.5, 'rgba(255,255,255,0.04)')
+  sheen.addColorStop(0.5, 'rgba(255,255,255,0.03)')
   sheen.addColorStop(1, 'rgba(255,255,255,0)')
   ctx.fillStyle = sheen
   ctx.fillRect(0, 0, W, H)
 
-  // Top hairline
-  ctx.strokeStyle = 'rgba(216,180,106,0.35)'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(W * 0.15, H * 0.08)
-  ctx.lineTo(W * 0.85, H * 0.08)
-  ctx.stroke()
+  // Artwork is centered horizontally and scaled relative to height (so it looks
+  // right on the cylinder regardless of how wide we make the canvas).
+  const cx = W / 2
 
   // Monogram
-  drawMonogram(ctx, W / 2, H * 0.32, W * 0.13)
+  drawMonogram(ctx, cx, H * 0.27, H * 0.10)
 
-  // Brand
+  // Brand wordmark
   ctx.fillStyle = GOLD_BRIGHT
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.font = '500 110px "Cormorant Garamond", "Times New Roman", serif'
-  ctx.fillText('Cellvéra®', W / 2, H * 0.52)
+  ctx.font = '500 96px "Cormorant Garamond", "Times New Roman", serif'
+  ctx.fillText('Cellvéra®', cx, H * 0.48)
 
   // Divider
   ctx.strokeStyle = 'rgba(216,180,106,0.55)'
   ctx.lineWidth = 1.5
   ctx.beginPath()
-  ctx.moveTo(W * 0.30, H * 0.62)
-  ctx.lineTo(W * 0.70, H * 0.62)
+  ctx.moveTo(cx - H * 0.10, H * 0.60)
+  ctx.lineTo(cx + H * 0.10, H * 0.60)
   ctx.stroke()
 
   // Product
   ctx.fillStyle = GOLD
-  ctx.font = '600 78px "Inter", system-ui, sans-serif'
-  ctx.fillText(opts.product, W / 2, H * 0.72)
+  ctx.font = '600 60px "Inter", system-ui, sans-serif'
+  ctx.letterSpacing = '4px'
+  ctx.fillText(opts.product, cx, H * 0.70)
 
   // Dose
   ctx.fillStyle = GOLD_BRIGHT
-  ctx.font = '400 64px "Inter", system-ui, sans-serif'
-  ctx.fillText(opts.dose, W / 2, H * 0.82)
-
-  // Bottom hairline
-  ctx.strokeStyle = 'rgba(216,180,106,0.35)'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(W * 0.15, H * 0.92)
-  ctx.lineTo(W * 0.85, H * 0.92)
-  ctx.stroke()
+  ctx.font = '400 52px "Inter", system-ui, sans-serif'
+  ctx.fillText(opts.dose, cx, H * 0.80)
 
   const tex = new THREE.CanvasTexture(c)
   tex.colorSpace = THREE.SRGBColorSpace

@@ -19,24 +19,40 @@ type VialProps = {
 
 const GOLD = '#d8b46a'
 const GOLD_DEEP = '#8a6d36'
-const CAP_BLACK = '#111111'
+const CAP_BLACK = '#0f0f0f'
 
-// Profile points for the glass vial body, lathed around Y axis.
-// All in centimeters; the body is ~3 wide, ~5 tall.
+/**
+ * Pharma vial profile — short, chunky body with a pronounced shoulder.
+ * Body height ~2.2 vs body diameter ~2.0 (aspect 1.1 : 1, intentionally stubby).
+ * X = radius, Y = vertical position; rotated around the Y axis via LatheGeometry.
+ */
 const VIAL_PROFILE: Array<[number, number]> = [
   [0.00, 0.00],
-  [0.85, 0.00],
-  [0.95, 0.04],
-  [0.97, 0.12],
-  [0.97, 2.55],
-  [0.92, 2.75],
-  [0.65, 2.95],
-  [0.55, 3.05],
-  [0.55, 3.45],
-  [0.60, 3.50],
-  [0.60, 3.52],
-  [0.00, 3.52],
+  [0.92, 0.00],
+  [1.00, 0.06],
+  [1.00, 1.95],
+  [0.97, 2.05],
+  [0.82, 2.18],
+  [0.65, 2.30],
+  [0.55, 2.42],
+  [0.55, 2.62],
+  [0.62, 2.68],
+  [0.62, 2.72],
+  [0.00, 2.72],
 ]
+
+const GLASS_TOP = 2.72
+
+// Cap dimensions — designed to be visually dominant like the reference photo.
+const GOLD_COLLAR_RADIUS = 0.72
+const GOLD_COLLAR_HEIGHT = 0.55
+const GOLD_COLLAR_Y = GLASS_TOP - 0.05 + GOLD_COLLAR_HEIGHT / 2 // overlap glass crimp slightly
+
+const BLACK_CAP_RADIUS = 0.60
+const BLACK_CAP_HEIGHT = 0.95
+const BLACK_CAP_Y = GLASS_TOP + GOLD_COLLAR_HEIGHT - 0.05 + BLACK_CAP_HEIGHT / 2
+
+const TOTAL_HEIGHT = BLACK_CAP_Y + BLACK_CAP_HEIGHT / 2
 
 function makeLatheGeometry(profile: Array<[number, number]>, segments = 96) {
   const pts = profile.map(([x, y]) => new THREE.Vector2(x, y))
@@ -55,28 +71,21 @@ export function Vial({
   const labelTex = useMemo(
     () =>
       reconstitution
-        ? makeVialLabel({ product: 'RECONSTITUTION', dose: 'LIQUID  3mL' })
+        ? makeVialLabel({ product: 'RECONSTITUTION', dose: 'LIQUID  ·  3mL' })
         : makeVialLabel({ product, dose }),
     [product, dose, reconstitution],
   )
 
   const bodyGeom = useMemo(() => makeLatheGeometry(VIAL_PROFILE, 96), [])
 
-  // Label is a cylinder wrapping the lower half of the body
-  const labelHeight = 1.35
-  const labelY = 1.05
-  const labelRadius = 0.98
+  // Label: centered on the body cylinder, takes ~55% of body height
+  const labelHeight = 1.15
+  const labelY = 0.95
+  const labelRadius = 1.01
 
-  // Liquid sits inside the body
-  const liquidHeight = lyophilized ? 0.7 : 2.2
-  const liquidY = liquidHeight / 2 + 0.05
-
-  // Cap geometry: gold collar + black plastic top
-  const collarHeight = 0.18
-  const capHeight = 0.32
-  const capRadius = 0.62
-  const collarY = 3.52 + collarHeight / 2
-  const capY = collarY + collarHeight / 2 + capHeight / 2
+  // Contents — lyophilized fills less of the vial than liquid
+  const contentsHeight = lyophilized ? 0.55 : 1.55
+  const contentsY = contentsHeight / 2 + 0.08
 
   return (
     <group position={position} rotation={rotation}>
@@ -86,50 +95,51 @@ export function Vial({
           <MeshTransmissionMaterial
             backside
             samples={6}
-            thickness={0.35}
-            roughness={0.02}
-            ior={1.45}
-            chromaticAberration={0.04}
-            anisotropy={0.1}
-            distortion={0.0}
-            distortionScale={0.2}
-            temporalDistortion={0.0}
+            thickness={0.25}
+            roughness={0.0}
+            ior={1.46}
+            chromaticAberration={0.02}
+            anisotropy={0.05}
+            distortion={0}
             transmission={1}
             clearcoat={1}
-            attenuationDistance={1.2}
-            attenuationColor="#f6efde"
+            attenuationDistance={3.5}
+            attenuationColor="#eaf3ee"
             color="#ffffff"
           />
         ) : (
           <meshPhysicalMaterial
-            color="#e9e3d2"
-            roughness={0.15}
+            color="#f0f4ef"
+            roughness={0.05}
             metalness={0}
-            transmission={0.7}
-            thickness={0.4}
-            ior={1.4}
+            transmission={0.92}
+            thickness={0.25}
+            ior={1.45}
             transparent
-            opacity={0.55}
+            opacity={0.85}
           />
         )}
       </mesh>
 
       {/* LIQUID / POWDER */}
-      <mesh position={[0, liquidY, 0]} castShadow>
-        <cylinderGeometry args={[0.92, 0.92, liquidHeight, 64]} />
+      <mesh position={[0, contentsY, 0]} castShadow>
+        <cylinderGeometry args={[0.96, 0.96, contentsHeight, 64]} />
         {lyophilized ? (
-          <meshStandardMaterial color="#f4ead2" roughness={0.85} metalness={0} />
+          // Lyophilized peptide — cream-white solid pellet, slightly textured
+          <meshStandardMaterial color="#f2e8ce" roughness={0.95} metalness={0} />
         ) : reconstitution ? (
+          // Reconstitution liquid — clear, very faint blue tint
           <meshPhysicalMaterial
-            color="#f7f1de"
+            color="#f5f9f7"
             roughness={0.05}
-            transmission={0.95}
-            thickness={1}
+            transmission={0.96}
+            thickness={1.2}
             ior={1.33}
             transparent
-            opacity={0.85}
+            opacity={0.65}
           />
         ) : (
+          // Default amber peptide solution
           <meshPhysicalMaterial
             color="#e8c87a"
             roughness={0.05}
@@ -144,46 +154,71 @@ export function Vial({
         )}
       </mesh>
 
-      {/* LABEL (wraparound cylinder; rotated so the wordmark faces +X/+Z toward the camera). */}
-      <mesh position={[0, labelY, 0]} rotation={[0, Math.PI, 0]}>
-        <cylinderGeometry args={[labelRadius, labelRadius, labelHeight, 64, 1, true]} />
+      {/* LABEL — wraparound cylinder, rotated so the wordmark center aligns with the camera azimuth */}
+      <mesh position={[0, labelY, 0]} rotation={[0, -Math.PI * 0.78, 0]}>
+        <cylinderGeometry args={[labelRadius, labelRadius, labelHeight, 96, 1, true]} />
         <meshStandardMaterial
           map={labelTex}
-          roughness={0.55}
-          metalness={0.1}
+          roughness={0.6}
+          metalness={0.08}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* GOLD COLLAR */}
-      <mesh position={[0, collarY, 0]} castShadow>
-        <cylinderGeometry args={[capRadius, capRadius * 0.95, collarHeight, 48]} />
+      {/* GOLD CRIMP COLLAR — the dominant gold band wrapping the neck and extending above */}
+      <mesh position={[0, GOLD_COLLAR_Y, 0]} castShadow>
+        <cylinderGeometry
+          args={[GOLD_COLLAR_RADIUS, GOLD_COLLAR_RADIUS * 1.04, GOLD_COLLAR_HEIGHT, 64]}
+        />
         <meshStandardMaterial
           color={GOLD}
-          roughness={mode === 'realistic' ? 0.18 : 0.5}
-          metalness={mode === 'realistic' ? 1 : 0.7}
+          roughness={mode === 'realistic' ? 0.18 : 0.45}
+          metalness={mode === 'realistic' ? 1 : 0.75}
           emissive={GOLD_DEEP}
-          emissiveIntensity={0.05}
+          emissiveIntensity={0.06}
         />
       </mesh>
 
-      {/* BLACK PLASTIC CAP TOP */}
-      <mesh position={[0, capY, 0]} castShadow>
-        <cylinderGeometry args={[capRadius * 0.92, capRadius, capHeight, 48]} />
+      {/* Thin gold seam line at the bottom of the collar (decorative) */}
+      <mesh position={[0, GOLD_COLLAR_Y - GOLD_COLLAR_HEIGHT / 2 + 0.02, 0]}>
+        <cylinderGeometry
+          args={[GOLD_COLLAR_RADIUS * 1.05, GOLD_COLLAR_RADIUS * 1.05, 0.04, 64]}
+        />
+        <meshStandardMaterial color={GOLD_DEEP} roughness={0.5} metalness={0.9} />
+      </mesh>
+
+      {/* BLACK PLASTIC FLIP-CAP — sits on top of the gold collar */}
+      <mesh position={[0, BLACK_CAP_Y, 0]} castShadow>
+        <cylinderGeometry
+          args={[BLACK_CAP_RADIUS, BLACK_CAP_RADIUS + 0.02, BLACK_CAP_HEIGHT, 64]}
+        />
         <meshStandardMaterial
           color={CAP_BLACK}
-          roughness={mode === 'realistic' ? 0.35 : 0.7}
-          metalness={0.2}
+          roughness={mode === 'realistic' ? 0.4 : 0.65}
+          metalness={0.15}
         />
       </mesh>
 
-      {/* Tiny gold ring detail recessed on top of cap (laid flat) */}
-      <mesh position={[0, capY + capHeight / 2 + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[capRadius * 0.55, capRadius * 0.82, 48]} />
-        <meshStandardMaterial color={GOLD_DEEP} side={THREE.DoubleSide} roughness={0.4} metalness={0.8} />
+      {/* Top of the black cap — slight inset disc for a finished look */}
+      <mesh position={[0, BLACK_CAP_Y + BLACK_CAP_HEIGHT / 2 + 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[BLACK_CAP_RADIUS * 0.94, 64]} />
+        <meshStandardMaterial color={CAP_BLACK} roughness={0.6} metalness={0.1} />
+      </mesh>
+
+      {/* Gold ring inlay on top of the black cap (matches reference detail) */}
+      <mesh position={[0, BLACK_CAP_Y + BLACK_CAP_HEIGHT / 2 + 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[BLACK_CAP_RADIUS * 0.48, BLACK_CAP_RADIUS * 0.78, 64]} />
+        <meshStandardMaterial
+          color={GOLD}
+          side={THREE.DoubleSide}
+          roughness={0.3}
+          metalness={1}
+          emissive={GOLD_DEEP}
+          emissiveIntensity={0.1}
+        />
       </mesh>
     </group>
   )
 }
 
-export const VIAL_TOTAL_HEIGHT = 3.52 + 0.18 + 0.32
+export const VIAL_TOTAL_HEIGHT = TOTAL_HEIGHT

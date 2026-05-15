@@ -5,7 +5,7 @@ import { Controls } from './ui/Controls'
 export default function App() {
   const [mode, setMode] = useState<Mode>('realistic')
   const [product, setProduct] = useState<Product>('single')
-  const [autoRotate, setAutoRotate] = useState(true)
+  const [autoRotate, setAutoRotate] = useState(false)
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[var(--color-noir-deep)] text-[var(--color-ivory)]">
